@@ -1,0 +1,12 @@
+{:tasks {:init (def xml-output "doc.xml")
+         xml (let [source "doc.adoc"
+                   backend "docbook5"]
+               (when (modified-since xml-output (fs/glob "." "**.adoc"))
+                 (println "invoking asciidoctor")
+                 (shell "asciidoctor" "-b" backend source "-o" xml-output)))
+         pdf {:depends [xml]
+              :task (if (modified-since "doc.pdf" [xml-output "style/custom.sty" "style/dblatex-custom.xsl"])
+                      (do (println "producing doc.pdf")
+                          (spit "doc.pdf" "content"))
+                      (println "nothing to do")) ;; I don't have dblatex installed
+              }}}
