@@ -5,17 +5,16 @@
                  (def css-file "target/app.css")
                  (def jar-file "target/foo.jar")
                  (defn java-files []
-                   (fs/glob sass-dir "**.java"))
+                   (fs/glob "src" "**.java"))
                  (defn sass-files []
-                   (fs/glob sass-dir "**.sass")))
+                   (fs/glob sass-dir "**.scss")))
          classes-dir (fs/create-dirs classes-dir)
          classes {:depends [classes-dir]
                   :task (when-let [modified (modified-since classes-dir (java-files))]
                           (apply shell "javac" "-d" classes-dir modified))}
          target-dir (fs/create-dirs classes-dir)
          css {:depends [target-dir]
-              :task (when-let [modified (modified-since sass-dir (sass-files))]
-                      (prn :sascc modified)
+              :task (when-let [modified (modified-since css-file (sass-files))]
                       (apply shell {:out css-file} "sassc" modified))}
          jar {:depends [target-dir classes css]
               :task (do
