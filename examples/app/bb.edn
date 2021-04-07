@@ -17,10 +17,9 @@
               :task (when-let [modified (modified-since css-file (sass-files))]
                       (apply shell {:out css-file} "sassc" modified))}
          jar {:depends [target-dir classes css]
-              :task (do
-                      (when-let [modified
-                                 (seq (concat (modified-since jar-file (sass-files))
-                                              (modified-since jar-file (fs/glob classes-dir "**"))))]
-                        (if (fs/exists? jar-file)
-                          (apply shell "jar uf" jar-file modified)
-                          (shell "jar cf" jar-file classes-dir))))}}}
+              :task (when-let [modified
+                               (seq (concat (modified-since jar-file (sass-files))
+                                            (modified-since jar-file (fs/glob classes-dir "**"))))]
+                      (if (fs/exists? jar-file)
+                        (apply shell "jar uf" jar-file modified)
+                        (shell "jar cf" jar-file classes-dir)))}}}
