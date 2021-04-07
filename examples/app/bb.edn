@@ -1,0 +1,27 @@
+{:tasks {:init (do
+                 (def classes-dir "target/classes")
+                 (def target-dir "target")
+                 (def sass-dir "sass")
+                 (def css-file "target/app.css")
+                 (def jar-file "target/foo.jar")
+                 (defn java-files []
+                   (fs/glob sass-dir "**.java"))
+                 (defn sass-files []
+                   (fs/glob sass-dir "**.sass")))
+         classes-dir (fs/create-dirs classes-dir)
+         classes {:depends [classes-dir]
+                  :task (when-let [modified (modified-since classes-dir (java-files))]
+                          (apply shell "javac" "-d" classes-dir modified))}
+         target-dir (fs/create-dirs classes-dir)
+         css {:depends [target-dir]
+              :task (when-let [modified (modified-since sass-dir (sass-files))]
+                      (prn :sascc modified)
+                      (apply shell {:out css-file} "sassc" modified))}
+         jar {:depends [target-dir classes css]
+              :task (do
+                      (when-let [modified
+                                 (seq (concat (modified-since jar-file (sass-files))
+                                              (modified-since jar-file (fs/glob classes-dir "**"))))]
+                        (if (fs/exists? jar-file)
+                          (apply shell "jar uf" jar-file modified)
+                          (shell "jar cf" jar-file classes-dir))))}}}
