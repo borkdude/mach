@@ -7,6 +7,7 @@
          pdf {:depends [xml]
               :task (if (modified-since "doc.pdf" [xml-output "style/custom.sty" "style/dblatex-custom.xsl"])
                       (do (println "producing doc.pdf")
+                          ;; I don't have dblatex installed
                           (spit "doc.pdf" "content"))
-                      (println "nothing to do")) ;; I don't have dblatex installed
+                      (println "nothing to do"))
               }}}
