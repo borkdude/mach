@@ -10,17 +10,17 @@
                    (fs/glob sass-dir "**.scss")))
          -classes-dir {:task (fs/create-dirs classes-dir)}
          classes {:depends [-classes-dir]
-                  :task (when-let [modified (modified-since classes-dir (java-files))]
+                  :task (when-let [modified (fs/modified-since classes-dir (java-files))]
                           (apply shell "javac" "-d" classes-dir modified))}
          -target-dir (fs/create-dirs classes-dir)
          css {:depends [-target-dir]
-              :task (when-let [modified (modified-since css-file (sass-files))]
+              :task (when-let [modified (fs/modified-since css-file (sass-files))]
                       (apply shell {:out css-file} "sassc" modified))}
          ;; what if I want to clean globally?
          jar {:depends [-target-dir classes css]
               :task (when-let [modified
-                               (seq (concat (modified-since jar-file (sass-files))
-                                            (modified-since jar-file (fs/glob classes-dir "**"))))]
+                               (seq (concat (fs/modified-since jar-file (sass-files))
+                                            (fs/modified-since jar-file (fs/glob classes-dir "**"))))]
                       (if (fs/exists? jar-file)
                         (apply shell "jar uf" jar-file modified)
                         (shell "jar cf" jar-file classes-dir)))}
