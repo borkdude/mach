@@ -1,4 +1,8 @@
 {:tasks {:init (do
+                 (ns my.tasks
+                   (:require [babashka.tasks :refer [clojure shell]]
+                             [babashka.fs :as fs]))
+
                  (def classes-dir "target/classes")
                  (def target-dir "target")
                  (def sass-dir "sass")
@@ -8,6 +12,7 @@
                    (fs/glob "src" "**.java"))
                  (defn sass-files []
                    (fs/glob sass-dir "**.scss")))
+
          -classes-dir {:task (fs/create-dirs classes-dir)}
          classes {:depends [-classes-dir]
                   :task (when-let [modified (fs/modified-since classes-dir (java-files))]
@@ -19,7 +24,6 @@
               :task (when-let [modified (fs/modified-since css-file (sass-files))]
                       (println "Compiling css")
                       (apply shell {:out css-file} "sassc" modified))}
-         ;; what if I want to clean globally?
          jar {:doc "Makes jar file from classes and css."
               :depends [-target-dir classes css]
               :task (when-let [modified
