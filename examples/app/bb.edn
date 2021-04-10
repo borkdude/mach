@@ -14,12 +14,14 @@
                           (println "Compiling java")
                           (apply shell "javac" "-d" classes-dir modified))}
          -target-dir (fs/create-dirs classes-dir)
-         css {:depends [-target-dir]
+         css {:doc "Compiles sass."
+              :depends [-target-dir]
               :task (when-let [modified (fs/modified-since css-file (sass-files))]
                       (println "Compiling css")
                       (apply shell {:out css-file} "sassc" modified))}
          ;; what if I want to clean globally?
-         jar {:depends [-target-dir classes css]
+         jar {:doc "Makes jar file from classes and css."
+              :depends [-target-dir classes css]
               :task (when-let [modified
                                (seq (concat (fs/modified-since jar-file (sass-files))
                                             (fs/modified-since jar-file (fs/glob classes-dir "**"))))]
