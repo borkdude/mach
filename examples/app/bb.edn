@@ -1,4 +1,5 @@
-{:tasks {-java-files (fs/glob "src" "**.java")
+{:tasks {:requires ([babashka.fs :as fs])
+         -java-files (fs/glob "src" "**.java")
          -sass-files (fs/glob "sass" "**.scss")
          -classes-dir (let [dir "target/classes"]
                         (fs/create-dirs dir)
