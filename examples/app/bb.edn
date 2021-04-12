@@ -1,38 +1,31 @@
-{:tasks {:init (do
-                 (ns my.tasks
-                   (:require [babashka.tasks :refer [clojure shell]]
-                             [babashka.fs :as fs]))
-
-                 (def classes-dir "target/classes")
-                 (def target-dir "target")
-                 (def sass-dir "sass")
-                 (def css-file "target/app.css")
-                 (def jar-file "target/foo.jar")
-                 (defn java-files []
-                   (fs/glob "src" "**.java"))
-                 (defn sass-files []
-                   (fs/glob sass-dir "**.scss")))
-
-         -classes-dir {:task (fs/create-dirs classes-dir)}
-         classes {:depends [-classes-dir]
-                  :task (when-let [modified (fs/modified-since classes-dir (java-files))]
+{:tasks {-java-files (defn java-files []
+                       (fs/glob "src" "**.java"))
+         -sass-files (defn sass-files []
+                       (fs/glob "sass" "**.scss"))
+         -classes-dir (let [dir "target/classes"]
+                        (fs/create-dirs dir)
+                        dir)
+         clean (when (fs/exists? "target")
+                 (fs/delete-tree "target")
+                 nil)
+         classes {:depends [-classes-dir -java-files]
+                  :task (when-let [modified (fs/modified-since -classes-dir (-java-files))]
                           (println "Compiling java")
-                          (apply shell "javac" "-d" classes-dir modified))}
-         -target-dir (fs/create-dirs classes-dir)
+                          (apply shell "javac" "-d" -classes-dir modified))}
          css {:doc "Compiles sass."
-              :depends [-target-dir]
-              :task (when-let [modified (fs/modified-since css-file (sass-files))]
-                      (println "Compiling css")
-                      (apply shell {:out css-file} "sassc" modified))}
+              :depends [-sass-files]
+              :task (let [css-file "target/app.css"]
+                      (when-let [modified (fs/modified-since css-file (-sass-files))]
+                        (println "Compiling css")
+                        (apply shell {:out css-file} "sassc" modified)))}
          jar {:doc "Makes jar file from classes and css."
-              :depends [-target-dir classes css]
-              :task (when-let [modified
-                               (seq (concat (fs/modified-since jar-file (sass-files))
-                                            (fs/modified-since jar-file (fs/glob classes-dir "**"))))]
-                      (println "making jar")
-                      (if (fs/exists? jar-file)
-                        (apply shell "jar uf" jar-file modified)
-                        (shell "jar cf" jar-file classes-dir)))}
-         clean (when (fs/exists? target-dir)
-                 (fs/delete-tree target-dir)
-                 nil)}}
+              :depends [-classes-dir classes css]
+              :task (let [jar-file "target/foo.jar"]
+                      (when-let [modified
+                                 (seq (concat (fs/modified-since jar-file (sass-files))
+                                              (fs/modified-since jar-file (fs/glob -classes-dir "**"))))]
+                        (println "making jar")
+                        (if (fs/exists? jar-file)
+                          (apply shell "jar uf" jar-file modified)
+                          (shell "jar cf" jar-file -classes-dir))))}
+         jar:clean {:depends [clean jar]}}}
