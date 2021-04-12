@@ -3,9 +3,7 @@
          -classes-dir (let [dir "target/classes"]
                         (fs/create-dirs dir)
                         dir)
-         clean (when (fs/exists? "target")
-                 (fs/delete-tree "target")
-                 nil)
+         clean (fs/delete-tree "target")
          classes {:depends [-classes-dir -java-files]
                   :task (when-let [modified (fs/modified-since -classes-dir -java-files)]
                           (println "Compiling java")
