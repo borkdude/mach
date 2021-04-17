@@ -6,14 +6,15 @@
                         dir)
          clean (fs/delete-tree "target")
          classes {:depends [-classes-dir -java-files]
-                  :task (when-let [modified (fs/modified-since -classes-dir -java-files)]
+                  :task (when-let [modified
+                                   (seq (fs/modified-since -classes-dir -java-files))]
                           (prn :modified (map str modified))
                           (println "Compiling java")
                           (apply shell "javac" "-d" -classes-dir modified))}
          css {:doc "Compiles sass."
               :depends [-sass-files]
               :task (let [css-file "target/app.css"]
-                      (when-let [modified (fs/modified-since css-file -sass-files)]
+                      (when-let [modified (seq (fs/modified-since css-file -sass-files))]
                         (println "Compiling css")
                         (apply shell {:out css-file} "sassc" modified)))}
          jar {:doc "Makes jar file from classes and css."
