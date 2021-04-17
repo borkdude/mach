@@ -7,6 +7,7 @@
          clean (fs/delete-tree "target")
          classes {:depends [-classes-dir -java-files]
                   :task (when-let [modified (fs/modified-since -classes-dir -java-files)]
+                          (prn :modified (map str modified))
                           (println "Compiling java")
                           (apply shell "javac" "-d" -classes-dir modified))}
          css {:doc "Compiles sass."
@@ -25,4 +26,5 @@
                         (if (fs/exists? jar-file)
                           (apply shell "jar uf" jar-file modified)
                           (shell "jar cf" jar-file -classes-dir))))}
-         jar:clean {:depends [clean jar]}}}
+         jar:clean (do (shell "bb clean")
+                       (shell "bb jar"))}}
